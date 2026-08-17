@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 215 45% 4%;
+  --foreground: 210 40% 98%;
+
+  --card: 215 45% 6%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 215 45% 6%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 199 89% 48%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 217 33% 15%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217 33% 13%;
+  --muted-foreground: 215 20% 65%;
+
+  --accent: 199 89% 48%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217 33% 18%;
+  --input: 217 33% 18%;
+  --ring: 199 89% 48%;
+
+  --radius: 1.5rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  color-scheme: dark;
+  background-color: #030712;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  color: #f3f4f6;
+  background: #030712;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Custom Scrollbar Liquid Glass Style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(3, 7, 18, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 9999px;
+  border: 2px solid rgba(3, 7, 18, 0.6);
+  backdrop-filter: blur(8px);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 165, 233, 0.5);
+}
+
+/* Apple Liquid Glass Utility Classes - Rimuru Slime Palette */
+@layer utilities {
+  .glass-card {
+    background: linear-gradient(
+      135deg,
+      rgba(56, 189, 248, 0.06) 0%,
+      rgba(255, 255, 255, 0.03) 50%,
+      rgba(14, 165, 233, 0.02) 100%
+    );
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    box-shadow: 
+      0 12px 36px 0 rgba(0, 0, 0, 0.45),
+      0 0 20px -5px rgba(14, 165, 233, 0.08),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+    transform: translateZ(0);
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-card-hover:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(56, 189, 248, 0.12) 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(14, 165, 233, 0.05) 100%
+    );
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 
+      0 20px 48px -12px rgba(0, 0, 0, 0.6),
+      0 0 32px -4px rgba(14, 165, 233, 0.28),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+    transform: translateY(-3px) translateZ(0);
+  }
+
+  .glass-panel {
+    background: rgba(8, 18, 32, 0.75);
+    backdrop-filter: blur(32px) saturate(190%);
+    -webkit-backdrop-filter: blur(32px) saturate(190%);
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 30px -10px rgba(14, 165, 233, 0.1);
+  }
+
+  .glass-pill {
+    background: rgba(56, 189, 248, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    border-radius: 9999px;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.25s ease-out;
+  }
+  .glass-pill:hover {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 0 0 16px rgba(14, 165, 233, 0.25);
+    transform: scale(1.02);
+  }
+
+  /* Specular Glare Reflection Line on Top Edge - Rimuru Aqua Light */
+  .specular-top {
+    position: relative;
+    overflow: hidden;
+  }
+  .specular-top::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      rgba(56, 189, 248, 0.6),
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Glass Glowing Accent Button - Rimuru Slime Gradient */
+  .glass-btn-primary {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    box-shadow: 
+      0 4px 20px -2px rgba(14, 165, 233, 0.55),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-btn-primary:hover {
+    background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%);
+    box-shadow: 
+      0 6px 28px 0 rgba(14, 165, 233, 0.75),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px) scale(1.02);
+  }
+  .glass-btn-primary:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .text-glow-cyan {
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.45);
+  }
+}

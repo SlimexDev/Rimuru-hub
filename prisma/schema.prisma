@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Script {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  title       String
+  gameId      String
+  game        Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  banner      String
+  videoUrl    String?
+  excerpt     String
+  content     String
+  code        String
+  executors   String       @default("[\"Delta\", \"Solara\", \"Wave\", \"Codex\"]")
+  features    String       @default("[\"Auto Farm\", \"Fast Attack\", \"ESP\", \"Teleport\"]")
+  isPublished Boolean      @default(true)
+  isVerified  Boolean      @default(true)
+  isKeyless   Boolean      @default(true)
+  views       Int          @default(0)
+  downloads   Int          @default(0)
+  rating      Float        @default(4.9)
+  author      String       @default("Verified Dev")
+  version     String       @default("v3.2.0")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  unlockSteps UnlockStep[]
+}
+
+model Game {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  icon      String
+  banner    String
+  scripts   Script[]
+  createdAt DateTime @default(now())
+}
+
+model UnlockStep {
+  id          String   @id @default(cuid())
+  label       String
+  description String
+  targetUrl   String
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  scriptId    String?
+  script      Script?  @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Guide {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  category    String
+  excerpt     String
+  content     String
+  banner      String
+  author      String   @default("Liquid Security Team")
+  readTime    String   @default("4 min")
+  isPublished Boolean  @default(true)
+  views       Int      @default(850)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String   @default("System Admin")
+  createdAt    DateTime @default(now())
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model AnalyticsStat {
+  id      String @id @default(cuid())
+  date    String @unique
+  views   Int    @default(0)
+  unlocks Int    @default(0)
+  copies  Int    @default(0)
+}
