@@ -1,14 +1,15 @@
 import React from 'react';
-import { prisma } from '@/lib/prisma';
+import { getUnlockSteps } from '@/lib/data';
 import { UnlockStepsManager } from '@/components/admin/UnlockStepsManager';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminUnlockStepsPage() {
-  const steps = await prisma.unlockStep.findMany({
-    where: { scriptId: null },
-    orderBy: { order: 'asc' },
-  });
+  const steps = getUnlockSteps();
 
-  return <UnlockStepsManager initialSteps={steps as any} />;
+  return (
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <UnlockStepsManager initialSteps={steps} />
+    </div>
+  );
 }

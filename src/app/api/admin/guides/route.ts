@@ -1,26 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { getGuides, GuideItem } from '@/lib/data';
+import { saveDataFile } from '@/lib/github-sync';
 
 export const dynamic = 'force-dynamic';
 
-const guideSchema = z.object({
-  title: z.string().min(3, 'Title required'),
-  slug: z.string().min(3, 'Slug required'),
-  category: z.string().min(1, 'Category required'),
-  excerpt: z.string().min(10, 'Excerpt required'),
-  content: z.string().min(20, 'Content required'),
-  banner: z.string().min(1, 'Banner required'),
-  author: z.string().default('Liquid Security Team'),
-  readTime: z.string().default('4 min read'),
-  isPublished: z.boolean().default(true),
-});
-
 export async function GET() {
   try {
-    const guides = await prisma.guide.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+    const guides = getGuides();
     return NextResponse.json({ guides });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -30,12 +16,42 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validated = guideSchema.parse(body);
+    const guides = getGuides();
 
-    const guide = await prisma.guide.create({
-      data: validated,
+    const newId = `guide-${Date.now()}`;
+    const now = new Date().toISOString();
+
+    const newGuide: GuideItem = {
+      id: newId,
+      slug: body.slug,
+      title: body.title,
+      category: body.category || 'PC Executors',
+      excerpt: body.excerpt,
+      content: body.content,
+      banner:
+        body.banner ||
+        'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&auto=format&fit=crop&q=80',
+      author: body.author || 'Rimuru Security Team',
+      readTime: body.readTime || '4 min read',
+      isPublished: body.isPublished ?? true,
+      views: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    guides.unshift(newGuide);
+
+    const syncResult = await saveDataFile({
+      fileName: 'guides.json',
+      data: guides,
+      commitMessage: `feat(guides): add new guide "${newGuide.title}"`,
     });
-    return NextResponse.json({ guide, success: true }, { status: 201 });
+
+    return NextResponse.json({
+      guide: newGuide,
+      success: true,
+      sync: syncResult,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }

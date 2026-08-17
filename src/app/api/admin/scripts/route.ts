@@ -1,45 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { getScripts, ScriptItem } from '@/lib/data';
+import { saveDataFile } from '@/lib/github-sync';
 
 export const dynamic = 'force-dynamic';
 
-const scriptSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  slug: z.string().min(3, 'Slug is required'),
-  gameId: z.string().min(1, 'Game is required'),
-  banner: z.string().min(1, 'Banner is required'),
-  videoUrl: z.string().optional().nullable(),
-  excerpt: z.string().min(10, 'Excerpt must be at least 10 characters'),
-  content: z.string().min(20, 'Content must be at least 20 characters'),
-  code: z.string().min(5, 'Code is required'),
-  executors: z.array(z.string()).or(z.string()),
-  features: z.array(z.string()).or(z.string()),
-  isPublished: z.boolean().default(true),
-  isVerified: z.boolean().default(true),
-  isKeyless: z.boolean().default(true),
-  author: z.string().default('Verified Dev'),
-  version: z.string().default('v1.0.0'),
-  unlockSteps: z.array(
-    z.object({
-      label: z.string(),
-      description: z.string(),
-      targetUrl: z.string(),
-      order: z.number().default(0),
-      isActive: z.boolean().default(true),
-    })
-  ).optional(),
-});
-
 export async function GET() {
   try {
-    const scripts = await prisma.script.findMany({
-      include: {
-        game: true,
-        unlockSteps: true,
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const scripts = getScripts();
     return NextResponse.json({ scripts });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -49,64 +16,52 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validated = scriptSchema.parse(body);
+    const scripts = getScripts();
 
-    const executorsString = typeof validated.executors === 'string'
-      ? validated.executors
-      : JSON.stringify(validated.executors);
+    const newId = `script-${Date.now()}`;
+    const now = new Date().toISOString();
 
-    const featuresString = typeof validated.features === 'string'
-      ? validated.features
-      : JSON.stringify(validated.features);
+    const newScript: ScriptItem = {
+      id: newId,
+      slug: body.slug,
+      title: body.title,
+      gameId: body.gameId,
+      banner: body.banner,
+      videoUrl: body.videoUrl || null,
+      excerpt: body.excerpt,
+      content: body.content,
+      code: body.code,
+      executors: body.executors || ['Delta', 'Solara', 'Wave', 'Codex'],
+      features: body.features || ['Auto Farm', 'Fast Attack'],
+      isPublished: body.isPublished ?? true,
+      isVerified: body.isVerified ?? true,
+      isKeyless: body.isKeyless ?? true,
+      views: 0,
+      downloads: 0,
+      rating: 4.9,
+      author: body.author || 'Rimuru Team',
+      version: body.version || 'v1.0.0',
+      createdAt: now,
+      updatedAt: now,
+      unlockSteps: body.unlockSteps || [],
+    };
 
-    // Check slug collision
-    const existing = await prisma.script.findUnique({
-      where: { slug: validated.slug },
-    });
-    if (existing) {
-      return NextResponse.json(
-        { error: 'A script with this slug already exists.' },
-        { status: 400 }
-      );
-    }
+    scripts.unshift(newScript);
 
-    const script = await prisma.script.create({
-      data: {
-        title: validated.title,
-        slug: validated.slug,
-        gameId: validated.gameId,
-        banner: validated.banner,
-        videoUrl: validated.videoUrl || '',
-        excerpt: validated.excerpt,
-        content: validated.content,
-        code: validated.code,
-        executors: executorsString,
-        features: featuresString,
-        isPublished: validated.isPublished,
-        isVerified: validated.isVerified,
-        isKeyless: validated.isKeyless,
-        author: validated.author,
-        version: validated.version,
-        unlockSteps: validated.unlockSteps && validated.unlockSteps.length > 0
-          ? {
-              create: validated.unlockSteps.map((step, idx) => ({
-                label: step.label,
-                description: step.description,
-                targetUrl: step.targetUrl,
-                order: step.order ?? idx + 1,
-                isActive: step.isActive ?? true,
-              })),
-            }
-          : undefined,
-      },
+    // Save to scripts.json and trigger GitHub sync
+    const syncResult = await saveDataFile({
+      fileName: 'scripts.json',
+      data: scripts,
+      commitMessage: `feat(scripts): add new script "${newScript.title}"`,
     });
 
-    return NextResponse.json({ script, success: true }, { status: 201 });
+    return NextResponse.json({
+      script: newScript,
+      success: true,
+      sync: syncResult,
+    });
   } catch (error: any) {
     console.error('Create script error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Validation error' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }

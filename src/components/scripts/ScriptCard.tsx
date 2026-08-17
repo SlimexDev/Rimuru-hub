@@ -16,17 +16,17 @@ export interface ScriptCardData {
   banner: string;
   excerpt: string;
   executors: string | string[];
-  features: string | string[];
-  isVerified: boolean;
-  isKeyless: boolean;
+  features?: string | string[];
+  isVerified?: boolean;
+  isKeyless?: boolean;
   views: number;
   downloads: number;
-  rating: number;
+  rating?: number;
   updatedAt: Date | string;
-  game: {
+  game?: {
     name: string;
-    slug: string;
-    icon: string;
+    slug?: string;
+    icon?: string;
   };
 }
 

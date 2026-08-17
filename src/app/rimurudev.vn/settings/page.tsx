@@ -1,15 +1,15 @@
 import React from 'react';
-import { prisma } from '@/lib/prisma';
+import { getSiteSettings } from '@/lib/data';
 import { SettingsForm } from '@/components/admin/SettingsForm';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminSettingsPage() {
-  const settings = await prisma.siteSetting.findMany();
-  const map: Record<string, string> = {};
-  settings.forEach((s) => {
-    map[s.key] = s.value;
-  });
+  const settings = getSiteSettings();
 
-  return <SettingsForm initialSettings={map} />;
+  return (
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <SettingsForm initialSettings={settings} />
+    </div>
+  );
 }

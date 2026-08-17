@@ -1,13 +1,16 @@
 import React from 'react';
-import { prisma } from '@/lib/prisma';
+import { getGames, getUnlockSteps } from '@/lib/data';
 import { ScriptForm } from '@/components/admin/ScriptForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewScriptAdminPage() {
-  const games = await prisma.game.findMany({
-    orderBy: { name: 'asc' },
-  });
+export default async function NewScriptPage() {
+  const games = getGames();
+  const defaultSteps = getUnlockSteps();
 
-  return <ScriptForm games={games} isEditing={false} />;
+  return (
+    <div className="space-y-6">
+      <ScriptForm games={games} defaultSteps={defaultSteps} />
+    </div>
+  );
 }

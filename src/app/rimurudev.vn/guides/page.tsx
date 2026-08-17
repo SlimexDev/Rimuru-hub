@@ -1,13 +1,15 @@
 import React from 'react';
-import { prisma } from '@/lib/prisma';
+import { getGuides } from '@/lib/data';
 import { GuidesTable } from '@/components/admin/GuidesTable';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminGuidesPage() {
-  const guides = await prisma.guide.findMany({
-    orderBy: { createdAt: 'desc' },
-  });
+  const guides = getGuides();
 
-  return <GuidesTable initialGuides={guides as any} />;
+  return (
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <GuidesTable initialGuides={guides as any} />
+    </div>
+  );
 }

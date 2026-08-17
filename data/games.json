@@ -1,0 +1,66 @@
+[
+  {
+    "id": "game-blox-fruits",
+    "name": "Blox Fruits",
+    "slug": "blox-fruits",
+    "icon": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&auto=format&fit=crop&q=80",
+    "banner": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-08-01T00:00:00.000Z"
+  },
+  {
+    "id": "game-blade-ball",
+    "name": "Blade Ball",
+    "slug": "blade-ball",
+    "icon": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=150&auto=format&fit=crop&q=80",
+    "banner": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-08-02T00:00:00.000Z"
+  },
+  {
+    "id": "game-pet-sim-99",
+    "name": "Pet Simulator 99",
+    "slug": "pet-simulator-99",
+    "icon": "https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=150&auto=format&fit=crop&q=80",
+    "banner": "https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?w=1200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-08-03T00:00:00.000Z"
+  },
+  {
+    "id": "game-da-hood",
+    "name": "Da Hood",
+    "slug": "da-hood",
+    "icon": "https://images.unsplash.com/photo-1563089145-599997674d42?w=150&auto=format&fit=crop&q=80",
+    "banner": "https://images.unsplash.com/photo-1563089145-599997674d42?w=1200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-08-04T00:00:00.000Z"
+  },
+  {
+    "id": "game-arsenal",
+    "name": "Arsenal",
+    "slug": "arsenal",
+    "icon": "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=150&auto=format&fit=crop&q=80",
+    "banner": "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-08-05T00:00:00.000Z"
+  },
+  {
+    "id": "game-anime-defenders",
+    "name": "Anime Defenders",
+    "slug": "anime-defenders",
+    "icon": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80",
+    "banner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-08-06T00:00:00.000Z"
+  },
+  {
+    "id": "game-king-legacy",
+    "name": "King Legacy",
+    "slug": "king-legacy",
+    "icon": "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=150&auto=format&fit=crop&q=80",
+    "banner": "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-08-07T00:00:00.000Z"
+  },
+  {
+    "id": "game-fisch",
+    "name": "Fisch",
+    "slug": "fisch",
+    "icon": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=150&auto=format&fit=crop&q=80",
+    "banner": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&auto=format&fit=crop&q=80",
+    "createdAt": "2026-08-08T00:00:00.000Z"
+  }
+]

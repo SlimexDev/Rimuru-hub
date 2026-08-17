@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { prisma } from '@/lib/prisma';
+import { getScripts, getGuides } from '@/lib/data';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassBadge } from '@/components/ui/GlassBadge';
 import { GlassButton } from '@/components/ui/GlassButton';
@@ -9,7 +9,6 @@ import { AnalyticsChart } from '@/components/admin/AnalyticsChart';
 import {
   Code2,
   Eye,
-  Zap,
   BookOpen,
   Plus,
   ArrowRight,
@@ -21,53 +20,47 @@ import { formatDate, formatCompactNumber } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
-  const [
-    scriptsCount,
-    guidesCount,
-    scripts,
-    analyticsStats,
-  ] = await Promise.all([
-    prisma.script.count(),
-    prisma.guide.count(),
-    prisma.script.findMany({
-      include: { game: true },
-      orderBy: { updatedAt: 'desc' },
-      take: 6,
-    }),
-    prisma.analyticsStat.findMany({
-      orderBy: { date: 'asc' },
-      take: 7,
-    }),
-  ]);
+  const scripts = getScripts();
+  const guides = getGuides();
 
   const totalViews = scripts.reduce((acc, curr) => acc + curr.views, 0);
   const totalUnlocks = scripts.reduce((acc, curr) => acc + curr.downloads, 0);
 
+  // Generate sample 7-day stats for live chart
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const analyticsStats = days.map((day, idx) => ({
+    id: `stat-${idx}`,
+    date: day,
+    views: Math.round(180 + Math.sin(idx) * 60 + idx * 25),
+    unlocks: Math.round(75 + Math.cos(idx) * 25 + idx * 12),
+    copies: Math.round(60 + idx * 10),
+  }));
+
   const statCards = [
     {
       label: 'Total Scripts',
-      value: scriptsCount.toString(),
+      value: scripts.length.toString(),
       icon: <Code2 className="w-5 h-5 text-sky-400" />,
       change: '+3 this week',
       href: '/rimurudev.vn/scripts',
     },
     {
       label: 'Total Views',
-      value: formatCompactNumber(totalViews * 3 + 120),
+      value: formatCompactNumber(totalViews),
       icon: <Eye className="w-5 h-5 text-teal-400" />,
       change: '+24% engagement',
       href: '/rimurudev.vn/scripts',
     },
     {
       label: 'Total Unlocks',
-      value: formatCompactNumber(totalUnlocks * 2 + 80),
+      value: formatCompactNumber(totalUnlocks),
       icon: <KeyRound className="w-5 h-5 text-emerald-400" />,
       change: '+18% unlocks',
       href: '/rimurudev.vn/unlock-steps',
     },
     {
       label: 'Published Guides',
-      value: guidesCount.toString(),
+      value: guides.length.toString(),
       icon: <BookOpen className="w-5 h-5 text-sky-400" />,
       change: 'Active & verified',
       href: '/rimurudev.vn/guides',
@@ -165,7 +158,7 @@ export default async function AdminDashboardPage() {
 
           <GlassCard className="p-6 border-sky-500/15 space-y-4">
             <div className="divide-y divide-white/5">
-              {scripts.map((script) => (
+              {scripts.slice(0, 6).map((script) => (
                 <div
                   key={script.id}
                   className="py-3.5 flex items-center justify-between gap-4 first:pt-0 last:pb-0"
@@ -248,10 +241,10 @@ export default async function AdminDashboardPage() {
             <GlassCard className="p-5 border-sky-500/20 bg-sky-950/15 space-y-3">
               <div className="flex items-center gap-2 text-sky-400 text-xs font-semibold">
                 <ShieldCheck className="w-4 h-4" />
-                Security Engine: Operational
+                Data Storage: Static JSON Sync
               </div>
               <p className="text-[11px] text-white/60 leading-relaxed">
-                Secret admin route active at <code className="text-sky-300">/rimurudev.vn</code>. Public navigation links hidden.
+                All changes automatically committed via GitHub API and deployed statically on Vercel.
               </p>
             </GlassCard>
           </div>

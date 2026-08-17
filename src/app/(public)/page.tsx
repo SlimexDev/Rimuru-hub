@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
+import { getPublishedScripts, getGames } from '@/lib/data';
 import { ScriptCard } from '@/components/scripts/ScriptCard';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
@@ -24,26 +24,10 @@ import {
 } from 'lucide-react';
 import { HomeClientSearch } from '@/components/home/HomeClientSearch';
 
-export const revalidate = 60; // ISR cache 60s
-
-export default async function HomePage() {
-  const [featuredScripts, popularScripts, games] = await Promise.all([
-    prisma.script.findMany({
-      where: { isPublished: true },
-      include: { game: true },
-      orderBy: { updatedAt: 'desc' },
-      take: 6,
-    }),
-    prisma.script.findMany({
-      where: { isPublished: true },
-      include: { game: true },
-      orderBy: { views: 'desc' },
-      take: 6,
-    }),
-    prisma.game.findMany({
-      orderBy: { name: 'asc' },
-    }),
-  ]);
+export default function HomePage() {
+  const allScripts = getPublishedScripts();
+  const games = getGames();
+  const featuredScripts = allScripts.slice(0, 6);
 
   const faqItems = [
     {

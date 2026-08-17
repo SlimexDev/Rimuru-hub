@@ -15,6 +15,7 @@ import {
   Gamepad2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { DeployStatusIndicator } from './DeployStatusIndicator';
 
 export const AdminSidebar: React.FC = () => {
   const pathname = usePathname();
@@ -90,7 +91,9 @@ export const AdminSidebar: React.FC = () => {
       </div>
 
       {/* Bottom Actions */}
-      <div className="space-y-3 pt-6 border-t border-sky-500/15">
+      <div className="space-y-3 pt-4 border-t border-sky-500/15">
+        <DeployStatusIndicator />
+
         <Link
           href="/"
           target="_blank"

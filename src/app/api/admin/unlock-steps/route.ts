@@ -1,23 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { getUnlockSteps, UnlockStepItem } from '@/lib/data';
+import { saveDataFile } from '@/lib/github-sync';
 
 export const dynamic = 'force-dynamic';
 
-const stepSchema = z.object({
-  label: z.string().min(1, 'Label is required'),
-  description: z.string().default(''),
-  targetUrl: z.string().min(1, 'Target URL is required'),
-  order: z.number().default(0),
-  isActive: z.boolean().default(true),
-});
-
 export async function GET() {
   try {
-    const steps = await prisma.unlockStep.findMany({
-      where: { scriptId: null },
-      orderBy: { order: 'asc' },
-    });
+    const steps = getUnlockSteps();
     return NextResponse.json({ steps });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -27,57 +16,42 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validated = stepSchema.parse(body);
+    const steps = getUnlockSteps();
 
-    const step = await prisma.unlockStep.create({
-      data: {
-        label: validated.label,
-        description: validated.description,
-        targetUrl: validated.targetUrl,
-        order: validated.order,
-        isActive: validated.isActive,
-        scriptId: null,
-      },
+    // If whole array is passed (reordering or batch update)
+    if (Array.isArray(body.steps)) {
+      const syncResult = await saveDataFile({
+        fileName: 'unlock-steps.json',
+        data: body.steps,
+        commitMessage: 'chore(unlock): reorder and update unlock steps',
+      });
+      return NextResponse.json({ success: true, steps: body.steps, sync: syncResult });
+    }
+
+    // Creating single new step
+    const newStep: UnlockStepItem = {
+      id: `step-${Date.now()}`,
+      label: body.label,
+      description: body.description || '',
+      targetUrl: body.targetUrl,
+      order: body.order ?? steps.length + 1,
+      isActive: body.isActive ?? true,
+      createdAt: new Date().toISOString(),
+    };
+
+    steps.push(newStep);
+
+    const syncResult = await saveDataFile({
+      fileName: 'unlock-steps.json',
+      data: steps,
+      commitMessage: `feat(unlock): add unlock step "${newStep.label}"`,
     });
 
-    return NextResponse.json({ step, success: true }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  try {
-    const body = await request.json();
-    if (Array.isArray(body.steps)) {
-      for (let i = 0; i < body.steps.length; i++) {
-        const s = body.steps[i];
-        await prisma.unlockStep.update({
-          where: { id: s.id },
-          data: {
-            order: i + 1,
-            label: s.label,
-            description: s.description,
-            targetUrl: s.targetUrl,
-            isActive: s.isActive ?? true,
-          },
-        });
-      }
-      return NextResponse.json({ success: true });
-    } else if (body.id) {
-      const updated = await prisma.unlockStep.update({
-        where: { id: body.id },
-        data: {
-          label: body.label,
-          description: body.description,
-          targetUrl: body.targetUrl,
-          isActive: body.isActive,
-          order: body.order,
-        },
-      });
-      return NextResponse.json({ step: updated, success: true });
-    }
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    return NextResponse.json({
+      step: newStep,
+      success: true,
+      sync: syncResult,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
@@ -87,12 +61,25 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
-    await prisma.unlockStep.delete({
-      where: { id },
+    if (!id) {
+      return NextResponse.json({ error: 'Step ID required' }, { status: 400 });
+    }
+
+    const steps = getUnlockSteps();
+    const filteredSteps = steps.filter((s) => s.id !== id);
+
+    const syncResult = await saveDataFile({
+      fileName: 'unlock-steps.json',
+      data: filteredSteps,
+      commitMessage: `chore(unlock): delete unlock step "${id}"`,
     });
-    return NextResponse.json({ success: true });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Step deleted',
+      sync: syncResult,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

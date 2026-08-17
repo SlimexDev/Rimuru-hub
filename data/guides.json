@@ -1,0 +1,47 @@
+[
+  {
+    "id": "guide-delta-mobile-setup",
+    "slug": "how-to-use-delta-executor-android-ios",
+    "title": "Complete Setup Guide: Delta Executor on Android & iOS",
+    "category": "Mobile Guide",
+    "excerpt": "Step-by-step instructions to install Delta Executor APK, bypass key system, and inject Lua scripts safely.",
+    "content": "### Introduction to Delta Executor\n\nDelta Executor is one of the most stable and feature-packed mobile Roblox executors available for Android and iOS.\n\n### Step 1: Download & Install\n1. Download the official Delta APK from the verified release channel.\n2. Enable 'Install from unknown sources' on your Android device settings.\n3. Install the APK and launch Roblox.\n\n### Step 2: Keyless Injection\nDelta features keyless injection when using Rimuru Scripts.\n1. Copy your desired script from the Rimuru Script Hub.\n2. Open the Delta overlay in-game and paste the loadstring.\n3. Tap 'Execute' and enjoy your game!",
+    "banner": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&auto=format&fit=crop&q=80",
+    "author": "Rimuru Security Team",
+    "readTime": "3 min read",
+    "isPublished": true,
+    "views": 1420,
+    "createdAt": "2026-08-01T00:00:00.000Z",
+    "updatedAt": "2026-08-15T00:00:00.000Z"
+  },
+  {
+    "id": "guide-solara-pc-setup",
+    "slug": "solara-v3-installation-and-troubleshooting",
+    "title": "Solara V3 PC: Free Windows Level 7 Execution Tutorial",
+    "category": "PC Executors",
+    "excerpt": "How to configure Windows Defender exclusions, extract Solara bootstrapper, and fix injection crash errors.",
+    "content": "### Overview\n\nSolara is a lightweight, Level 7 bytecode Roblox executor built for 64-bit Windows.\n\n### Requirements\n- Windows 10/11 (64-bit)\n- Microsoft Visual C++ 2015–2022 Redistributables\n- Antivirus exclusion for Solara folder\n\n### Installation\n1. Extract the Solara.zip archive to a dedicated folder (e.g. `C:\\Solara`).\n2. Add the folder as an exclusion in Windows Defender.\n3. Launch `SolaraBootstrapper.exe` as Administrator.\n4. Join any Roblox experience and press Attach.",
+    "banner": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&auto=format&fit=crop&q=80",
+    "author": "AimForge",
+    "readTime": "5 min read",
+    "isPublished": true,
+    "views": 2890,
+    "createdAt": "2026-08-03T00:00:00.000Z",
+    "updatedAt": "2026-08-16T00:00:00.000Z"
+  },
+  {
+    "id": "guide-anti-ban-safety-tips",
+    "slug": "roblox-script-safety-and-antiban-checklist",
+    "title": "Roblox Account Safety: How to Avoid Bans in 2026",
+    "category": "Security & Safety",
+    "excerpt": "Essential safety rules, alt account strategies, and anticheat detection avoidance techniques.",
+    "content": "### Safety Rules\n1. **Always Use Alt Accounts**: Never run untested or high-CPS scripts on your main account with valuable items.\n2. **Avoid Blatant Cheating**: Use smooth aimbot settings and reasonable walking speeds to avoid manual player reports.\n3. **Use Sandbox-Verified Scripts**: Only execute scripts verified on Rimuru Script Hub to guarantee 0 backdoors or malicious webhooks.",
+    "banner": "https://images.unsplash.com/photo-1563089145-599997674d42?w=1200&auto=format&fit=crop&q=80",
+    "author": "Rimuru Security Team",
+    "readTime": "4 min read",
+    "isPublished": true,
+    "views": 3150,
+    "createdAt": "2026-08-05T00:00:00.000Z",
+    "updatedAt": "2026-08-16T00:00:00.000Z"
+  }
+]

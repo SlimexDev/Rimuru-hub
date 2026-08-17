@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
+import { getPublishedScripts, getScriptBySlug } from '@/lib/data';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlassButton } from '@/components/ui/GlassButton';
 import { GlassBadge } from '@/components/ui/GlassBadge';
@@ -17,15 +17,11 @@ import {
   Calendar,
   User,
   Zap,
-  Play,
   CheckCircle2,
   Terminal,
-  Cpu,
   Smartphone,
   Monitor,
-  Sparkles,
   ArrowRight,
-  ExternalLink,
 } from 'lucide-react';
 import { formatDate, formatCompactNumber } from '@/lib/utils';
 import type { Metadata } from 'next';
@@ -34,11 +30,16 @@ interface Props {
   params: { slug: string };
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const script = await prisma.script.findUnique({
-    where: { slug: params.slug },
-    include: { game: true },
-  });
+// 100% SSG: Pre-generate all published script pages at build time
+export function generateStaticParams() {
+  const scripts = getPublishedScripts();
+  return scripts.map((script) => ({
+    slug: script.slug,
+  }));
+}
+
+export function generateMetadata({ params }: Props): Metadata {
+  const script = getScriptBySlug(params.slug);
 
   if (!script) {
     return { title: 'Script Not Found' };
@@ -55,54 +56,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export const revalidate = 60;
-
-export default async function ScriptDetailPage({ params }: Props) {
-  const script = await prisma.script.findUnique({
-    where: { slug: params.slug },
-    include: {
-      game: true,
-      unlockSteps: {
-        orderBy: { order: 'asc' },
-      },
-    },
-  });
+export default function ScriptDetailPage({ params }: Props) {
+  const script = getScriptBySlug(params.slug);
 
   if (!script || !script.isPublished) {
     notFound();
   }
 
-  // Increment views in background and update analytics
-  const today = new Date().toISOString().split('T')[0];
-  Promise.all([
-    prisma.script.update({
-      where: { id: script.id },
-      data: { views: { increment: 1 } },
-    }),
-    prisma.analyticsStat.upsert({
-      where: { date: today },
-      update: { views: { increment: 1 } },
-      create: { date: today, views: 1, unlocks: 0, copies: 0 },
-    }),
-  ]).catch(() => {});
+  const allPublished = getPublishedScripts();
+  const relatedScripts = allPublished
+    .filter((s) => s.gameId === script.gameId && s.id !== script.id)
+    .slice(0, 3);
 
-  const relatedScripts = await prisma.script.findMany({
-    where: {
-      gameId: script.gameId,
-      id: { not: script.id },
-      isPublished: true,
-    },
-    include: { game: true },
-    take: 3,
-  });
+  const executors = Array.isArray(script.executors)
+    ? script.executors
+    : ['Delta', 'Solara', 'Wave', 'Codex'];
 
-  const executors: string[] = typeof script.executors === 'string'
-    ? JSON.parse(script.executors || '[]')
-    : script.executors || [];
-
-  const features: string[] = typeof script.features === 'string'
-    ? JSON.parse(script.features || '[]')
-    : script.features || [];
+  const features = Array.isArray(script.features)
+    ? script.features
+    : ['Auto Farm', 'Fast Attack'];
 
   const scriptFaq = [
     {
@@ -128,10 +100,10 @@ export default async function ScriptDetailPage({ params }: Props) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 space-y-12">
       {/* 1. HERO BANNER & HEADER */}
-      <GlassCard className="p-6 sm:p-10 border-white/15 relative overflow-hidden">
+      <GlassCard className="p-6 sm:p-10 border-sky-500/15 relative overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Left Preview Image */}
-          <div className="lg:col-span-5 relative aspect-[16/10] rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-2xl">
+          <div className="lg:col-span-5 relative aspect-[16/10] rounded-2xl overflow-hidden bg-black/40 border border-sky-500/20 shadow-2xl">
             <Image
               src={script.banner}
               alt={script.title}
@@ -142,7 +114,7 @@ export default async function ScriptDetailPage({ params }: Props) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-black/70 backdrop-blur-md text-white border border-white/20">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-black/70 backdrop-blur-md text-white border border-sky-500/20">
                 {script.game?.name}
               </span>
               <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-amber-400 text-xs font-semibold border border-amber-500/30">
@@ -155,7 +127,7 @@ export default async function ScriptDetailPage({ params }: Props) {
           {/* Right Meta & CTA */}
           <div className="lg:col-span-7 space-y-5">
             <div className="flex flex-wrap items-center gap-2">
-              <GlassBadge variant="emerald" size="sm" icon={<ShieldCheck className="w-3.5 h-3.5" />}>
+              <GlassBadge variant="cyan" size="sm" icon={<ShieldCheck className="w-3.5 h-3.5" />}>
                 100% Verified
               </GlassBadge>
               {script.isKeyless && (
@@ -163,7 +135,7 @@ export default async function ScriptDetailPage({ params }: Props) {
                   Keyless Script
                 </GlassBadge>
               )}
-              <span className="text-xs font-mono text-white/50 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/10">
+              <span className="text-xs font-mono text-white/50 bg-white/5 px-2.5 py-0.5 rounded-full border border-sky-500/20">
                 {script.version}
               </span>
             </div>
@@ -177,29 +149,29 @@ export default async function ScriptDetailPage({ params }: Props) {
             </p>
 
             {/* Quick Metadata Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-white/10 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-sky-500/15 text-xs">
               <div>
                 <span className="text-white/40 block">Author</span>
                 <span className="text-white font-medium flex items-center gap-1 mt-0.5">
-                  <User className="w-3 h-3 text-emerald-400" /> {script.author}
+                  <User className="w-3 h-3 text-sky-400" /> {script.author}
                 </span>
               </div>
               <div>
                 <span className="text-white/40 block">Updated</span>
                 <span className="text-white font-medium flex items-center gap-1 mt-0.5">
-                  <Calendar className="w-3 h-3 text-emerald-400" /> {formatDate(script.updatedAt)}
+                  <Calendar className="w-3 h-3 text-sky-400" /> {formatDate(script.updatedAt)}
                 </span>
               </div>
               <div>
                 <span className="text-white/40 block">Views</span>
                 <span className="text-white font-medium flex items-center gap-1 mt-0.5">
-                  <Eye className="w-3 h-3 text-emerald-400" /> {formatCompactNumber(script.views)}
+                  <Eye className="w-3 h-3 text-sky-400" /> {formatCompactNumber(script.views)}
                 </span>
               </div>
               <div>
                 <span className="text-white/40 block">Downloads</span>
                 <span className="text-white font-medium flex items-center gap-1 mt-0.5">
-                  <Download className="w-3 h-3 text-emerald-400" /> {formatCompactNumber(script.downloads)}
+                  <Download className="w-3 h-3 text-cyan-400" /> {formatCompactNumber(script.downloads)}
                 </span>
               </div>
             </div>
@@ -226,18 +198,18 @@ export default async function ScriptDetailPage({ params }: Props) {
         {/* Left Col: Features, Showcase & Instructions */}
         <div className="lg:col-span-8 space-y-8">
           {/* Key Features Breakdown */}
-          <GlassCard className="p-6 sm:p-8 border-white/10 space-y-5">
+          <GlassCard className="p-6 sm:p-8 border-sky-500/15 space-y-5">
             <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-emerald-400" />
+              <Zap className="w-5 h-5 text-sky-400" />
               <h2 className="text-xl font-bold text-white tracking-tight">Key Script Features</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {features.map((feature, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.04] border border-white/10"
+                  className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.04] border border-sky-500/15"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
                   <span className="text-sm font-medium text-white/90">{feature}</span>
                 </div>
               ))}
@@ -245,32 +217,32 @@ export default async function ScriptDetailPage({ params }: Props) {
           </GlassCard>
 
           {/* Description & Detailed Content */}
-          <GlassCard className="p-6 sm:p-8 border-white/10 space-y-4">
+          <GlassCard className="p-6 sm:p-8 border-sky-500/15 space-y-4">
             <h2 className="text-xl font-bold text-white tracking-tight">Script Overview & Documentation</h2>
-            <div className="text-sm text-white/70 leading-relaxed space-y-4 whitespace-pre-line border-t border-white/10 pt-4">
+            <div className="text-sm text-white/70 leading-relaxed space-y-4 whitespace-pre-line border-t border-sky-500/15 pt-4">
               {script.content}
             </div>
           </GlassCard>
 
           {/* Step-by-Step Execution Guide (PC & Mobile) */}
-          <GlassCard id="execution-guide" className="p-6 sm:p-8 border-white/10 space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <GlassCard id="execution-guide" className="p-6 sm:p-8 border-sky-500/15 space-y-6">
+            <div className="flex items-center justify-between border-b border-sky-500/15 pb-4">
               <div className="flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-emerald-400" />
+                <Terminal className="w-5 h-5 text-sky-400" />
                 <h2 className="text-xl font-bold text-white tracking-tight">
                   How to Execute this Script
                 </h2>
               </div>
-              <GlassBadge variant="emerald" size="sm">
+              <GlassBadge variant="cyan" size="sm">
                 Beginner Friendly
               </GlassBadge>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* PC Guide */}
-              <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
+              <div className="p-5 rounded-2xl bg-white/[0.03] border border-sky-500/15 space-y-3">
                 <div className="flex items-center gap-2 text-white font-bold text-sm">
-                  <Monitor className="w-4 h-4 text-emerald-400" />
+                  <Monitor className="w-4 h-4 text-sky-400" />
                   PC Execution (Solara / Wave)
                 </div>
                 <ol className="text-xs text-white/60 space-y-2 list-decimal list-inside">
@@ -283,7 +255,7 @@ export default async function ScriptDetailPage({ params }: Props) {
               </div>
 
               {/* Mobile Guide */}
-              <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
+              <div className="p-5 rounded-2xl bg-white/[0.03] border border-sky-500/15 space-y-3">
                 <div className="flex items-center gap-2 text-white font-bold text-sm">
                   <Smartphone className="w-4 h-4 text-cyan-400" />
                   Mobile Execution (Delta / Codex)
@@ -311,9 +283,9 @@ export default async function ScriptDetailPage({ params }: Props) {
         {/* Right Sidebar: Security Audit, Compatibility, CTA */}
         <div className="lg:col-span-4 space-y-6">
           {/* Unlock Action Card */}
-          <GlassCard className="p-6 border-emerald-500/30 shadow-glass-glow space-y-4 bg-gradient-to-b from-white/[0.08] to-emerald-950/20">
+          <GlassCard className="p-6 border-sky-500/30 shadow-glass-glow space-y-4 bg-gradient-to-b from-white/[0.08] to-sky-950/20">
             <div className="text-center space-y-2">
-              <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-semibold">
+              <span className="text-xs font-mono uppercase tracking-wider text-sky-400 font-semibold">
                 Instant Access
               </span>
               <h3 className="text-xl font-bold text-white">Unlock Full Script</h3>
@@ -329,10 +301,10 @@ export default async function ScriptDetailPage({ params }: Props) {
           </GlassCard>
 
           {/* Security & Sandbox Audit Card */}
-          <GlassCard className="p-6 border-white/10 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <GlassCard className="p-6 border-sky-500/15 space-y-4">
+            <div className="flex items-center justify-between border-b border-sky-500/15 pb-3">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <ShieldCheck className="w-5 h-5 text-sky-400" />
                 <h4 className="font-bold text-white text-sm">Security Audit</h4>
               </div>
               <GlassBadge variant="verified" size="sm">
@@ -341,17 +313,17 @@ export default async function ScriptDetailPage({ params }: Props) {
             </div>
 
             <div className="space-y-2.5 text-xs text-white/70">
-              <div className="flex justify-between py-1 border-b border-white/5">
+              <div className="flex justify-between py-1 border-b border-sky-500/10">
                 <span>Webhook Scanner</span>
-                <span className="text-emerald-400 font-medium">Safe (0 Found)</span>
+                <span className="text-sky-400 font-medium">Safe (0 Found)</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
+              <div className="flex justify-between py-1 border-b border-sky-500/10">
                 <span>Token Grabber Check</span>
-                <span className="text-emerald-400 font-medium">Passed</span>
+                <span className="text-sky-400 font-medium">Passed</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-white/5">
+              <div className="flex justify-between py-1 border-b border-sky-500/10">
                 <span>External HTTP Check</span>
-                <span className="text-emerald-400 font-medium">GitHub Raw Only</span>
+                <span className="text-sky-400 font-medium">GitHub Raw Only</span>
               </div>
               <div className="flex justify-between py-1">
                 <span>Last Scanned</span>
@@ -361,15 +333,15 @@ export default async function ScriptDetailPage({ params }: Props) {
           </GlassCard>
 
           {/* Compatible Executors */}
-          <GlassCard className="p-6 border-white/10 space-y-3">
+          <GlassCard className="p-6 border-sky-500/15 space-y-3">
             <h4 className="font-bold text-white text-sm">Supported Executors</h4>
             <div className="flex flex-wrap gap-1.5">
               {executors.map((exec) => (
                 <span
                   key={exec}
-                  className="px-3 py-1 rounded-full text-xs font-medium bg-white/[0.06] text-white/80 border border-white/10 flex items-center gap-1"
+                  className="px-3 py-1 rounded-full text-xs font-medium bg-white/[0.06] text-white/80 border border-sky-500/15 flex items-center gap-1"
                 >
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <CheckCircle2 className="w-3 h-3 text-sky-400" />
                   {exec}
                 </span>
               ))}
@@ -380,7 +352,7 @@ export default async function ScriptDetailPage({ params }: Props) {
 
       {/* 3. RELATED SCRIPTS */}
       {relatedScripts.length > 0 && (
-        <section className="space-y-6 pt-8 border-t border-white/10">
+        <section className="space-y-6 pt-8 border-t border-sky-500/15">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-white tracking-tight">
               More {script.game?.name} Scripts

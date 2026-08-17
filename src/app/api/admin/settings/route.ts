@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSiteSettings } from '@/lib/data';
+import { saveDataFile } from '@/lib/github-sync';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const settings = await prisma.siteSetting.findMany();
-    const map: Record<string, string> = {};
-    settings.forEach((s) => {
-      map[s.key] = s.value;
-    });
-    return NextResponse.json({ settings: map });
+    const settings = getSiteSettings();
+    return NextResponse.json({ settings });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -19,15 +16,21 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    for (const key of Object.keys(body)) {
-      await prisma.siteSetting.upsert({
-        where: { key },
-        update: { value: String(body[key]) },
-        create: { key, value: String(body[key]) },
-      });
-    }
-    return NextResponse.json({ success: true, message: 'Settings saved' });
+    const currentSettings = getSiteSettings();
+    const updatedSettings = { ...currentSettings, ...body };
+
+    const syncResult = await saveDataFile({
+      fileName: 'site-settings.json',
+      data: updatedSettings,
+      commitMessage: 'chore(settings): update site configuration',
+    });
+
+    return NextResponse.json({
+      settings: updatedSettings,
+      success: true,
+      sync: syncResult,
+    });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }

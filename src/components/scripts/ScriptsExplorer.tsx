@@ -56,7 +56,7 @@ export const ScriptsExplorer: React.FC<{
       .sort((a, b) => {
         if (sortBy === 'popular') return b.views - a.views;
         if (sortBy === 'latest') return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        if (sortBy === 'rating') return b.rating - a.rating;
+        if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
         return 0;
       });
   }, [initialScripts, search, selectedGame, selectedExecutor, sortBy]);

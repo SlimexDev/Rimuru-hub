@@ -1,18 +1,15 @@
 import React from 'react';
-import { prisma } from '@/lib/prisma';
+import { getGames } from '@/lib/data';
 import { GamesManager } from '@/components/admin/GamesManager';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminGamesPage() {
-  const games = await prisma.game.findMany({
-    include: {
-      _count: {
-        select: { scripts: true },
-      },
-    },
-    orderBy: { name: 'asc' },
-  });
+  const games = getGames();
 
-  return <GamesManager initialGames={games as any} />;
+  return (
+    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+      <GamesManager initialGames={games as any} />
+    </div>
+  );
 }

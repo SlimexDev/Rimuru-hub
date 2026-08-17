@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { prisma } from '@/lib/prisma';
+import { getPublishedScripts, getGames } from '@/lib/data';
 import { ScriptsExplorer } from '@/components/scripts/ScriptsExplorer';
 import { GlassBadge } from '@/components/ui/GlassBadge';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -10,19 +10,9 @@ export const metadata: Metadata = {
   description: 'Browse hundreds of verified, keyless, and safe Roblox scripts for Blox Fruits, Blade Ball, Fisch, Pet Simulator 99, and more.',
 };
 
-export const revalidate = 60;
-
-export default async function ScriptsPage() {
-  const [scripts, games] = await Promise.all([
-    prisma.script.findMany({
-      where: { isPublished: true },
-      include: { game: true },
-      orderBy: { views: 'desc' },
-    }),
-    prisma.game.findMany({
-      orderBy: { name: 'asc' },
-    }),
-  ]);
+export default function ScriptsPage() {
+  const scripts = getPublishedScripts();
+  const games = getGames();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 space-y-8">

@@ -57,6 +57,7 @@ export interface ScriptFormProps {
   initialData?: any;
   games: { id: string; name: string; slug: string }[];
   isEditing?: boolean;
+  defaultSteps?: any[];
 }
 
 export const ScriptForm: React.FC<ScriptFormProps> = ({

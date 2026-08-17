@@ -1,0 +1,29 @@
+[
+  {
+    "id": "step-1-yt-sub",
+    "label": "Subscribe to Rimuru on YouTube",
+    "description": "Subscribe & hit the notification bell for daily verified scripts and executors.",
+    "targetUrl": "https://youtube.com/@RimuruScripts",
+    "order": 1,
+    "isActive": true,
+    "createdAt": "2026-08-01T00:00:00.000Z"
+  },
+  {
+    "id": "step-2-yt-like",
+    "label": "Like & Comment on Latest Showcase",
+    "description": "Drop a like on our latest video showcase to support developer bypass updates.",
+    "targetUrl": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    "order": 2,
+    "isActive": true,
+    "createdAt": "2026-08-01T00:00:00.000Z"
+  },
+  {
+    "id": "step-3-discord-join",
+    "label": "Join Rimuru Discord Community",
+    "description": "Get instant notifications when scripts get updated, patched, or keyless bypassed.",
+    "targetUrl": "https://discord.gg/rimuruscripts",
+    "order": 3,
+    "isActive": true,
+    "createdAt": "2026-08-01T00:00:00.000Z"
+  }
+]

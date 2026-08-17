@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getScripts, getScriptById } from '@/lib/data';
+import { saveDataFile } from '@/lib/github-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,20 +9,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const script = await prisma.script.findUnique({
-      where: { id: params.id },
-      include: {
-        game: true,
-        unlockSteps: {
-          orderBy: { order: 'asc' },
-        },
-      },
-    });
-
+    const script = getScriptById(params.id);
     if (!script) {
       return NextResponse.json({ error: 'Script not found' }, { status: 404 });
     }
-
     return NextResponse.json({ script });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -34,59 +25,32 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
+    const scripts = getScripts();
+    const index = scripts.findIndex((s) => s.id === params.id);
 
-    const executorsString = typeof body.executors === 'string'
-      ? body.executors
-      : JSON.stringify(body.executors || []);
-
-    const featuresString = typeof body.features === 'string'
-      ? body.features
-      : JSON.stringify(body.features || []);
-
-    const script = await prisma.script.update({
-      where: { id: params.id },
-      data: {
-        title: body.title,
-        slug: body.slug,
-        gameId: body.gameId,
-        banner: body.banner,
-        videoUrl: body.videoUrl ?? '',
-        excerpt: body.excerpt,
-        content: body.content,
-        code: body.code,
-        executors: executorsString,
-        features: featuresString,
-        isPublished: body.isPublished ?? true,
-        isVerified: body.isVerified ?? true,
-        isKeyless: body.isKeyless ?? true,
-        author: body.author ?? 'Verified Dev',
-        version: body.version ?? 'v1.0.0',
-      },
-    });
-
-    if (Array.isArray(body.unlockSteps)) {
-      await prisma.unlockStep.deleteMany({
-        where: { scriptId: script.id },
-      });
-
-      for (let i = 0; i < body.unlockSteps.length; i++) {
-        const s = body.unlockSteps[i];
-        if (s.label && s.targetUrl) {
-          await prisma.unlockStep.create({
-            data: {
-              scriptId: script.id,
-              label: s.label,
-              description: s.description || '',
-              targetUrl: s.targetUrl,
-              order: s.order ?? i + 1,
-              isActive: s.isActive ?? true,
-            },
-          });
-        }
-      }
+    if (index === -1) {
+      return NextResponse.json({ error: 'Script not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ script, success: true });
+    const updatedScript = {
+      ...scripts[index],
+      ...body,
+      updatedAt: new Date().toISOString(),
+    };
+
+    scripts[index] = updatedScript;
+
+    const syncResult = await saveDataFile({
+      fileName: 'scripts.json',
+      data: scripts,
+      commitMessage: `chore(scripts): update script "${updatedScript.title}"`,
+    });
+
+    return NextResponse.json({
+      script: updatedScript,
+      success: true,
+      sync: syncResult,
+    });
   } catch (error: any) {
     console.error('Update script error:', error);
     return NextResponse.json({ error: error.message }, { status: 400 });
@@ -98,10 +62,21 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await prisma.script.delete({
-      where: { id: params.id },
+    const scripts = getScripts();
+    const targetScript = scripts.find((s) => s.id === params.id);
+    const filteredScripts = scripts.filter((s) => s.id !== params.id);
+
+    const syncResult = await saveDataFile({
+      fileName: 'scripts.json',
+      data: filteredScripts,
+      commitMessage: `chore(scripts): delete script "${targetScript?.title || params.id}"`,
     });
-    return NextResponse.json({ success: true, message: 'Script deleted' });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Script deleted successfully',
+      sync: syncResult,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
